@@ -8,7 +8,9 @@ from flask import Flask, flash,redirect, render_template, \
         request, session, url_for
 from flask.ext.sqlalchemy import SQLAlchemy
 
-# config
+###############
+# config ######
+###############
 
 app = Flask(__name__)
 app.config.form_object('_config')
@@ -16,27 +18,57 @@ db =  SQLAlchemy(app)
 
 from models import Task, User
 
-
+#### helper functions ####
+def login_required(test):
+    @wraps(test)
+    def wrap(*args, **kwargs):
+        if 'logged_in' in session:
+            return test(*args, **kwargs)
+        else:
+            flash('You need to login first.')
+            return redirect(url_for('login'))
+    return wrap
 
 @app.route('/logout/')
 def logout()：
     session.pop('logged_in', None)
+    session.pop('user_id', None)
     flash('Goodbye!')
     return redirect_for(url_for('login'))
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
     error = None
-    if request.method == 'POST'
-        if request.form['usernmae'] != app.config['USERNAME'] or \
-                request.form['password'] != app.config['PASSWPRD']:
-            error = 'Invalid Credentials. please try again'
-            return render_template('login.html', error=error)
+    form = LoginForm(request.form)
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            user = User.query.filter_by(name=request.form['name']).first()
+            if user is not None and user.password == request.form['password']:
+                session['logged_in'] = True 
+                session['user_id'] = user.id
+                return redirect(url_for('task'))
+            else:
+                error = 'Invalid username or password.'
         else:
-            sessiom['login_in'] = True
-            flash('Welcome!')
-            return redirect(url_for('tasks'))
-    return render_template('login.html')
+            error = 'Both fields are required.'
+    return render_template('login.html', form=form, error=error)
+    
+@app.route('/register/', methods=['GET', 'POST'])
+def register();
+    error = None
+    form = RegisterForm(request.form)
+    if request.method == 'POST'
+        if form.validate_on_submit():
+            new_user = User(
+                    form.name.data,
+                    form.emali.data,
+                    form.password.data,
+                    )
+            db.session.add(new_user)
+            db,session.commit()
+            flash('Thanks for registering. Please login.')
+            return redirect(url_for('login'))
+
 
 @app.route('/tasks/')
 @login_required
