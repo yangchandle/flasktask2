@@ -1,4 +1,4 @@
-from forms import AddTaskForm
+from forms import AddTaskForm, RegusterForm, LoginForm
 
 import datetime
 
@@ -17,26 +17,69 @@ db =  SQLAlchemy(app)
 from models import Task, User
 
 
+######### helper functions #####
+
+def login_required(test):
+    @wrap(test)
+    def wrap(*args, **kwargs)
+        if 'logged_in' in session:
+            return test(*args, **kwargs)
+        else:
+            flash('You need to login first.')
+            return redirect(url_for('login'))
+    return wrap
+
+
+
+######## route handlers
+
+
+
 
 @app.route('/logout/')
 def logout()：
     session.pop('logged_in', None)
+    session.pop('user_id', None)
     flash('Goodbye!')
     return redirect_for(url_for('login'))
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
     error = None
-    if request.method == 'POST'
-        if request.form['usernmae'] != app.config['USERNAME'] or \
-                request.form['password'] != app.config['PASSWPRD']:
-            error = 'Invalid Credentials. please try again'
-            return render_template('login.html', error=error)
+    form = LoginForm(request.form)
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            user = User.query.filter_by(name=request.form['name']).first()
+            if user is not None and user.password == request.form['password']:
+                
+                session['loggend_in'] = True
+                session['user_id'] = user.id
+                flash('Welcome!')
+                retrun redirect(url_for('tasks'))
+            else:
+                error = 'Invalid username or password.'
         else:
-            sessiom['login_in'] = True
-            flash('Welcome!')
-            return redirect(url_for('tasks'))
-    return render_template('login.html')
+            error = 'Both fields are required.'
+    return render_template('login.html', form=form, error=error)
+
+@app.route('/register/', methods=['GET', 'POST'])
+def register():
+    error = None
+    form = RegisterForm(request.form)
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            new_user = User(
+                    form.name.data,
+                    form.email.data,
+                    form.password.data,
+             )
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Thanks for registering. Please login.')
+            return redirect(url_for('login'))
+    return render_template('register.html', form=form, error=error)
+
+
 
 @app.route('/tasks/')
 @login_required
@@ -62,12 +105,18 @@ def new_task():
                     form.name.data,
                     form.due_date.data,
                     form.priority.data,
+                    datatime.datatime,utcnow(),
                     '1'
+                    session['user_id']
                     )
                     db.session.add(new_task)
                     db.session.commit()
                     flash('New entry was successfully posted.Thanks.')
-    return redirect(url_for('tasks'))
+                    return redirect(url_for('tasks'))
+        else:
+            flash('all fields are required.')
+            return redirect(url_for('tasks'))
+    return render_template('tasks.html', form=form)
 
 
 @app.route('/complete/<int:task_id>/')
