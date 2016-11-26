@@ -1,21 +1,21 @@
 # project/form.py 
 
-from flash_wtf import Form
-from wtform import StringField, DateField, InteferField, \
+from flask_wtf  import Form
+from wtforms import StringField, DateField, IntegerField, \
         SelectField, PasswordField
-from wtforms.validators import DateRequired, Length, EqualTo
+from wtforms.validators import DataRequired, Length, EqualTo
 
 class AddTaskForm(Form):
-    task_id = IntergerField()
+    task_id = IntegerField()
     name = StringField('Task Name', validators=[DataRequired()])
     due_date = DateField(
             'Date Due (mm/dd/yyyy)',
-            validator=[DateRequired()], format='%m/%d/%y'
+            validators=[DateRequired()], format='%m/%d/%y'
     )
     priority = SelectField(
             'Priority',
             validators=[DataRequired()],
-            choice=[
+            choices=[
                ('1', '1'),('2', '2'),('3', '3'),('4', '4'),('5', '5'),('6', '6'), ('7', '7'),('8', '8'),('9', '9'),('10', '10')
         ] 
     )
