@@ -1,4 +1,4 @@
-from forms import AddTaskForm
+from forms import AddTaskForm, RegusterForm, LoginForm
 
 import datetime
 
@@ -18,16 +18,35 @@ db =  SQLAlchemy(app)
 
 from models import Task, User
 
+<<<<<<< HEAD
 #### helper functions ####
 def login_required(test):
     @wraps(test)
     def wrap(*args, **kwargs):
+=======
+
+######### helper functions #####
+
+def login_required(test):
+    @wrap(test)
+    def wrap(*args, **kwargs)
+>>>>>>> d43927da3b3d8ebcfce4605cd16f92a561f17b12
         if 'logged_in' in session:
             return test(*args, **kwargs)
         else:
             flash('You need to login first.')
             return redirect(url_for('login'))
     return wrap
+<<<<<<< HEAD
+=======
+
+
+
+######## route handlers
+
+
+
+>>>>>>> d43927da3b3d8ebcfce4605cd16f92a561f17b12
 
 @app.route('/logout/')
 def logout()：
@@ -44,14 +63,23 @@ def login():
         if form.validate_on_submit():
             user = User.query.filter_by(name=request.form['name']).first()
             if user is not None and user.password == request.form['password']:
+<<<<<<< HEAD
                 session['logged_in'] = True 
                 session['user_id'] = user.id
                 return redirect(url_for('task'))
+=======
+                
+                session['loggend_in'] = True
+                session['user_id'] = user.id
+                flash('Welcome!')
+                retrun redirect(url_for('tasks'))
+>>>>>>> d43927da3b3d8ebcfce4605cd16f92a561f17b12
             else:
                 error = 'Invalid username or password.'
         else:
             error = 'Both fields are required.'
     return render_template('login.html', form=form, error=error)
+<<<<<<< HEAD
     
 @app.route('/register/', methods=['GET', 'POST'])
 def register();
@@ -68,6 +96,26 @@ def register();
             db,session.commit()
             flash('Thanks for registering. Please login.')
             return redirect(url_for('login'))
+=======
+
+@app.route('/register/', methods=['GET', 'POST'])
+def register():
+    error = None
+    form = RegisterForm(request.form)
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            new_user = User(
+                    form.name.data,
+                    form.email.data,
+                    form.password.data,
+             )
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Thanks for registering. Please login.')
+            return redirect(url_for('login'))
+    return render_template('register.html', form=form, error=error)
+
+>>>>>>> d43927da3b3d8ebcfce4605cd16f92a561f17b12
 
 
 @app.route('/tasks/')
@@ -94,12 +142,18 @@ def new_task():
                     form.name.data,
                     form.due_date.data,
                     form.priority.data,
+                    datatime.datatime,utcnow(),
                     '1'
+                    session['user_id']
                     )
                     db.session.add(new_task)
                     db.session.commit()
                     flash('New entry was successfully posted.Thanks.')
-    return redirect(url_for('tasks'))
+                    return redirect(url_for('tasks'))
+        else:
+            flash('all fields are required.')
+            return redirect(url_for('tasks'))
+    return render_template('tasks.html', form=form)
 
 
 @app.route('/complete/<int:task_id>/')
